@@ -1,4 +1,4 @@
-from urllib import request
+import requests
 from flask import Flask, Response, Request
 
 app = Flask(__name__)
@@ -6,7 +6,13 @@ app = Flask(__name__)
 
 @app.route("/example")
 def simple():
-    return Response(request.get("http://www.example.com"))
+    return Response(requests.get("http://www.example.com"))
+
+
+@app.route("/")
+def index():
+    port = request_dns()
+    return Response(requests.get(f"http://localhost:{port}"))
 
 
 def modify_request(message):
@@ -18,9 +24,7 @@ def modify_request(message):
 
 
 def request_dns():
-    """
-    Request dns server here.
-    """
+    return 8080
 
 
 def calculate_throughput():
@@ -30,4 +34,4 @@ def calculate_throughput():
 
 
 if __name__ == "__main__":
-    app.run(port=8999)
+    app.run(host="0.0.0.0", port=8999)

@@ -157,19 +157,15 @@ if __name__ == "__main__":
 
     signal.signal(signal.SIGINT, int_handler)
 
-    try:
-        server = Process(target=app.run, kwargs={"host": "0.0.0.0", "port": port, "threaded": True})
-        server.start()
-        while True:
-            if time_cnt == timeout:
-                server.terminate()
-                server.join()
-                log_file.close()
-                info(f"No requests for {timeout} seconds. Quitted automatically.")
-                break
-            time_cnt += 1
-            time.sleep(1)
-    except KeyboardInterrupt:
-        log_file.close()
-        info("Manually Quitted.")
-        exit()
+
+    server = Process(target=app.run, kwargs={"host": "0.0.0.0", "port": port, "threaded": True})
+    server.start()
+    while True:
+        if time_cnt == timeout:
+            server.terminate()
+            server.join()
+            log_file.close()
+            info(f"No requests for {timeout} seconds. Quitted automatically.")
+            break
+        time_cnt += 1
+        time.sleep(1)

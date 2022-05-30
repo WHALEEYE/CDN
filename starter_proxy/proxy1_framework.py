@@ -55,14 +55,15 @@ def modify_request(chunk_name):
 
     server_port = request_dns()
     chunk_name = f"{selected_bitrate}Seg{seg_num}-Frag{frag_num}"
-    start = time.clock()
+    start = time.time()
     debug(f"Requesting {chunk_name}")
     rep = requests.get(f"http://localhost:{server_port}/vod/{chunk_name}")
-    end = time.clock()
+    end = time.time()
     duration = end - start
     calculate_throughput(len(rep.content), duration)
+    
     log(
-        time.time(),
+        time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start)),
         duration,
         len(rep.content) / (duration * 1024),
         tput,
@@ -71,6 +72,7 @@ def modify_request(chunk_name):
         seg_num,
         frag_num
     )
+    
     return rep
 
 
@@ -107,9 +109,10 @@ def debug(msg):
 
 
 def log(time, duration, tput, avg_tput, bitrate, server_port, chunk_seg, chunk_frag):
-    log_file.write(
-        f"{time} {duration} {tput} {avg_tput} {bitrate} {server_port} {chunk_seg}-{chunk_frag}\n"
-    )
+    with open(log_file, "a", encoding="utf-8") as f:    
+        f.write(
+            f"{time} {duration} {tput} {avg_tput} {bitrate} {server_port} {chunk_seg}-{chunk_frag}\n"
+        )
 
 
 if __name__ == "__main__":
@@ -120,7 +123,7 @@ if __name__ == "__main__":
     if len(sys.argv) < 5:
         sys.stderr.write("Too few arguments!\n")
         exit()
-    log_file = open(str(sys.argv[1]), "w+", encoding="utf8")
+    log_file = sys.argv[1]
     alpha = float(sys.argv[2])
     port = int(sys.argv[3])
     dns_port = int(sys.argv[4])

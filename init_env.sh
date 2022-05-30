@@ -1,3 +1,4 @@
+pip install numpy matplotlib 
 pip3 install flask
 apt install libapr1 iputils-ping -y
 chmod +x /usr/local/apache2/bin/httpd

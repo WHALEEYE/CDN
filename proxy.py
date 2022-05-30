@@ -1,11 +1,20 @@
-import requests
-from flask import Flask, Response, Request
-import xml.dom.minidom
-import time
+import os
 import re
+import signal
 import sys
+import time
+import xml.dom.minidom
+from multiprocessing import Process
+
+import requests
+from flask import Flask, Response
 
 app = Flask(__name__)
+
+
+@app.before_request
+def refresh():
+    os.kill(os.getppid(), signal.SIGINT)
 
 
 @app.route("/index.html")
@@ -111,6 +120,8 @@ def debug(msg):
     if debug_flag:
         print(f"\033[36m[DEBUG] {msg}\033[0m")
 
+def info(msg):
+    print(f"\033[32m[INFO] {msg}\033[0m")
 
 def log(time, duration, tput, avg_tput, bitrate, server_port, chunk_seg, chunk_frag):
     log_file.write(
@@ -118,7 +129,13 @@ def log(time, duration, tput, avg_tput, bitrate, server_port, chunk_seg, chunk_f
     )
 
 
+def int_handler(a, b):
+    global time_cnt
+    time_cnt = 0
+
+
 if __name__ == "__main__":
+    time_cnt = 0
     default_port = None
     debug_flag = False
     tput = {}
@@ -135,8 +152,19 @@ if __name__ == "__main__":
     if len(sys.argv) > 6:
         debug_flag = bool(sys.argv[6])
 
+    signal.signal(signal.SIGINT, int_handler)
+
     try:
-        app.run(host="0.0.0.0", port=port)
-    except KeyBoardInterrupt:
+        server = Process(target=app.run, args=('0.0.0.0', port))
+        server.start()
+        while True:
+            if time_cnt == 60:
+                server.terminate()
+                server.join()
+                log_file.close()
+                info("No requests for 60 seconds. Quitted automatically.")
+                break
+            time_cnt += 1
+            time.sleep(1)
+    except KeyboardInterrupt:
         log_file.close()
-        exit()

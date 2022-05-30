@@ -44,35 +44,38 @@ def modify_request(chunk_name):
     rst = re.search("1000Seg([0-9]*)-Frag([0-9]*)", chunk_name)
     seg_num = rst.group(1)
     frag_num = rst.group(2)
+    server_port = request_dns()
 
     selected_bitrate = bitrates[sorted(bitrates)[0]]
-    debug(f"Current tput: {tput}")
-    if tput != 0 and bitrates:
+    debug(
+        f"(port {server_port}) Current tput: {tput[server_port] if server_port in tput else 0}"
+    )
+    if server_port in tput and bitrates:
         for bitrate in sorted(bitrates)[::-1]:
-            if bitrate * 1.5 <= tput:
+            if bitrate * 1.5 <= tput[server_port]:
                 selected_bitrate = bitrate
                 break
 
-    server_port = request_dns()
     chunk_name = f"{selected_bitrate}Seg{seg_num}-Frag{frag_num}"
+    debug(f"(port {server_port}) Requesting {chunk_name}")
     start = time.time()
-    debug(f"Requesting {chunk_name}")
     rep = requests.get(f"http://localhost:{server_port}/vod/{chunk_name}")
     end = time.time()
     duration = end - start
-    calculate_throughput(len(rep.content), duration)
-    
+    cur_tput = (len(rep.content) * 8) / (duration * 1024)
+    calculate_throughput(cur_tput, duration, server_port)
+
     log(
-        time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start)),
+        time.time(),
         duration,
-        len(rep.content) / (duration * 1024),
-        tput,
+        cur_tput,
+        tput[server_port],
         selected_bitrate,
         server_port,
         seg_num,
-        frag_num
+        frag_num,
     )
-    
+
     return rep
 
 
@@ -93,14 +96,15 @@ def request_dns():
     return 8080
 
 
-def calculate_throughput(trunk_size, time_cost):
+def calculate_throughput(cur_tput, time_cost, server_port):
     global tput
-    new_tput = trunk_size / (time_cost * 1024)
-    if tput == 0:
-        tput = new_tput
+    if server_port not in tput:
+        tput[server_port] = cur_tput
     else:
-        tput = tput * (1 - alpha) + new_tput * alpha
-    debug(f"data len: {trunk_size}, time cost: {time_cost}, new tput: {tput}")
+        tput[server_port] = tput[server_port] * (1 - alpha) + cur_tput * alpha
+    debug(
+        f"(port {server_port}) calculated tput: {cur_tput} -- renewed tput: {tput[server_port]}"
+    )
 
 
 def debug(msg):
@@ -109,21 +113,20 @@ def debug(msg):
 
 
 def log(time, duration, tput, avg_tput, bitrate, server_port, chunk_seg, chunk_frag):
-    with open(log_file, "a", encoding="utf-8") as f:    
-        f.write(
-            f"{time} {duration} {tput} {avg_tput} {bitrate} {server_port} {chunk_seg}-{chunk_frag}\n"
-        )
+    log_file.write(
+        f"{time} {duration} {tput} {avg_tput} {bitrate} {server_port} {chunk_seg}-{chunk_frag}\n"
+    )
 
 
 if __name__ == "__main__":
     default_port = None
     debug_flag = False
-    tput = 0
+    tput = {}
     bitrates = {}
     if len(sys.argv) < 5:
         sys.stderr.write("Too few arguments!\n")
         exit()
-    log_file = sys.argv[1]
+    log_file = open(sys.argv[1], "w", encoding="utf8")
     alpha = float(sys.argv[2])
     port = int(sys.argv[3])
     dns_port = int(sys.argv[4])

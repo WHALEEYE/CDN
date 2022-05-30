@@ -72,7 +72,7 @@ def modify_request(chunk_name):
     end = time.time()
     duration = end - start
     cur_tput = (len(rep.content) * 8) / (duration * 1024)
-    calculate_throughput(cur_tput, duration, server_port)
+    calculate_throughput(cur_tput, server_port)
 
     log(
         time.time(),
@@ -105,7 +105,7 @@ def request_dns():
     return 8080
 
 
-def calculate_throughput(cur_tput, time_cost, server_port):
+def calculate_throughput(cur_tput, server_port):
     global tput
     if server_port not in tput:
         tput[server_port] = cur_tput
@@ -120,8 +120,10 @@ def debug(msg):
     if debug_flag:
         print(f"\033[36m[DEBUG] {msg}\033[0m")
 
+
 def info(msg):
     print(f"\033[32m[INFO] {msg}\033[0m")
+
 
 def log(time, duration, tput, avg_tput, bitrate, server_port, chunk_seg, chunk_frag):
     log_file.write(
@@ -136,6 +138,7 @@ def int_handler(a, b):
 
 if __name__ == "__main__":
     time_cnt = 0
+    timeout = 30
     default_port = None
     debug_flag = False
     tput = {}
@@ -155,16 +158,18 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, int_handler)
 
     try:
-        server = Process(target=app.run, args=('0.0.0.0', port))
+        server = Process(target=app.run, kwargs={"host": "0.0.0.0", "port": port, "threaded": True})
         server.start()
         while True:
-            if time_cnt == 60:
+            if time_cnt == timeout:
                 server.terminate()
                 server.join()
                 log_file.close()
-                info("No requests for 60 seconds. Quitted automatically.")
+                info(f"No requests for {timeout} seconds. Quitted automatically.")
                 break
             time_cnt += 1
             time.sleep(1)
     except KeyboardInterrupt:
         log_file.close()
+        info("Manually Quitted.")
+        exit()

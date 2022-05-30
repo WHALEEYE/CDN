@@ -23,10 +23,10 @@ netsim_sharelink_stop:
 	python3 docker_setup/netsim/netsim.py onelink stop
 
 proxy_simple:
-	python3 proxy.py logs/proxy$(TIME).log 0.125 8999 8990 8080 True
+	python3 proxy.py logs/proxy_simple.log 0.125 8999 8990 8080 True
 
 proxy_onelink:
-	python3 proxy.py logs/proxy$(TIME).log 0.125 8999 8990 15641 True
+	python3 proxy.py logs/proxy_onelink.log 0.125 8999 8990 15641 True
 
 proxy_sharelink1:
 	python3 proxy.py logs/sharelink/proxy1.log 0.125 8999 8990 15640 True

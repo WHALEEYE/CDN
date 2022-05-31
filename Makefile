@@ -1,5 +1,5 @@
-LINKTYPE = sharelink
-ALPHA = 0.1
+LINKTYPE ?= sharelink
+ALPHA ?= 0.1
 DEBUG = True
 DNSPORT = 5533
 

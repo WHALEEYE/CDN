@@ -128,9 +128,10 @@ def info(msg):
 
 
 def log(time, duration, tput, avg_tput, bitrate, server_port, chunk_seg, chunk_frag):
-    log_file.write(
-        f"{time} {duration} {tput} {avg_tput} {bitrate} {server_port} {chunk_seg}-{chunk_frag}\n"
-    )
+    with open(log_file, "a", encoding="utf8") as f:
+        f.write(
+            f"{time} {duration} {tput} {avg_tput} {bitrate} {server_port} {chunk_seg}-{chunk_frag}\n"
+        )
 
 
 def int_handler(a, b):
@@ -148,7 +149,8 @@ if __name__ == "__main__":
     if len(sys.argv) < 5:
         sys.stderr.write("Too few arguments!\n")
         exit()
-    log_file = open(sys.argv[1], "w", encoding="utf8")
+    log_file = sys.argv[1]
+    open(log_file, "w", encoding="utf8")
     alpha = float(sys.argv[2])
     port = int(sys.argv[3])
     dns_port = int(sys.argv[4])

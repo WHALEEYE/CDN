@@ -102,7 +102,9 @@ def parse_f4m(f4m_data):
 def request_dns():
     if not default_port is None:
         return default_port
-    return 8080
+    else:
+        res = requests.get(f"http://localhost:{1127}/dns")
+        return int(res.content)
 
 
 def calculate_throughput(cur_tput, server_port):

@@ -25,7 +25,7 @@ netsim_stop:
 	python3 docker_setup/netsim/netsim.py $(LINKTYPE) stop
 
 proxy_simple:
-	python3 proxy.py logs/proxy_simple.log 0.125 8999 $(DNSPORT) 8080 $(DEBUG)
+	python3 proxy.py logs/proxy_simple.log 0.125 8999 $(DNSPORT)
 
 proxy_onelink:
 	python3 proxy.py logs/proxy_onelink.log 0.125 8999 $(DNSPORT) 15641 $(DEBUG)
@@ -38,3 +38,6 @@ proxy2:
 
 graph:
 	cd graphs/$(LINKTYPE)/$(ALPHA) && python ../../../grapher.py ../../../logs/$(LINKTYPE)/$(ALPHA)/netsim.log ../../../logs/$(LINKTYPE)/$(ALPHA)/proxy1.log ../../../logs/$(LINKTYPE)/$(ALPHA)/proxy2.log
+
+DNS_simple:
+	python3 dns.py /home/CDN/docker_setup/netsim/servers/2servers 1127

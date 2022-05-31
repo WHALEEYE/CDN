@@ -1,7 +1,7 @@
 LINKTYPE = sharelink
 ALPHA = 0.1
 DEBUG = True
-DNSPORT = 8990
+DNSPORT = 5533
 
 netsim_simple:
 	python3 docker_setup/netsim/netsim.py servers start -s /home/CDN/docker_setup/netsim/servers/2servers
@@ -40,4 +40,4 @@ graph:
 	cd graphs/$(LINKTYPE)/$(ALPHA) && python ../../../grapher.py ../../../logs/$(LINKTYPE)/$(ALPHA)/netsim.log ../../../logs/$(LINKTYPE)/$(ALPHA)/proxy1.log ../../../logs/$(LINKTYPE)/$(ALPHA)/proxy2.log
 
 DNS_simple:
-	python3 dns.py /home/CDN/docker_setup/netsim/servers/2servers 1127
+	python3 dns.py /home/CDN/docker_setup/netsim/servers/2servers $(DNSPORT)

@@ -14,7 +14,7 @@ app = Flask(__name__)
 
 @app.before_request
 def refresh():
-    os.kill(os.getppid(), signal.SIGINT)
+    os.kill(counter_proc.pid, signal.SIGUSR1)
 
 
 @app.route("/index.html")
@@ -103,7 +103,7 @@ def request_dns():
     if not default_port is None:
         return default_port
     else:
-        res = requests.get(f"http://localhost:{1127}/dns")
+        res = requests.get(f"http://localhost:{dns_port}/dns")
         return int(res.content)
 
 
@@ -128,13 +128,28 @@ def info(msg):
 
 
 def log(time, duration, tput, avg_tput, bitrate, server_port, chunk_seg, chunk_frag):
-    with open(log_file, "a", encoding="utf8") as f:
-        f.write(
-            f"{time} {duration} {tput} {avg_tput} {bitrate} {server_port} {chunk_seg}-{chunk_frag}\n"
-        )
+    log_file.write(
+        f"{time} {duration} {tput} {avg_tput} {bitrate} {server_port} {chunk_seg}-{chunk_frag}\n"
+    )
 
 
-def int_handler(a, b):
+def timeout_count():
+    global time_cnt
+    signal.signal(signal.SIGUSR1, reset_cnt)
+    try:
+        while True:
+            if time_cnt == timeout:
+                info(f"No requests for {timeout} seconds. Quitted automatically.")
+                os.kill(os.getppid(), signal.SIGINT)
+                sys.exit()
+            time_cnt += 1
+            time.sleep(1)
+    except KeyboardInterrupt:
+        info(f"Quitted manually.")
+        os.kill(os.getppid(), signal.SIGINT)
+
+
+def reset_cnt(signum, frame):
     global time_cnt
     time_cnt = 0
 
@@ -143,14 +158,13 @@ if __name__ == "__main__":
     time_cnt = 0
     timeout = 30
     default_port = None
-    debug_flag = False
+    debug_flag = True
     tput = {}
     bitrates = {}
     if len(sys.argv) < 5:
         sys.stderr.write("Too few arguments!\n")
-        exit()
-    log_file = sys.argv[1]
-    open(log_file, "w", encoding="utf8")
+        sys.exit()
+    log_file = open(sys.argv[1], "w", encoding="utf8")
     alpha = float(sys.argv[2])
     port = int(sys.argv[3])
     dns_port = int(sys.argv[4])
@@ -159,17 +173,11 @@ if __name__ == "__main__":
     if len(sys.argv) > 6:
         debug_flag = bool(sys.argv[6])
 
-    signal.signal(signal.SIGINT, int_handler)
-
-
-    server = Process(target=app.run, kwargs={"host": "0.0.0.0", "port": port, "threaded": True})
-    server.start()
-    while True:
-        if time_cnt == timeout:
-            server.terminate()
-            server.join()
-            log_file.close()
-            info(f"No requests for {timeout} seconds. Quitted automatically.")
-            break
-        time_cnt += 1
-        time.sleep(1)
+    counter_proc = Process(target=timeout_count)
+    counter_proc.start()
+    
+    try:
+        app.run(host="0.0.0.0", port=port, threaded=True)
+    except KeyboardInterrupt:
+        debug("Flask quitting and closing files...")
+        log_file.close()

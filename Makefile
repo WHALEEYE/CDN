@@ -2,18 +2,10 @@ LINKTYPE ?= sharelink
 ALPHA ?= 0.1
 DEBUG = True
 DNSPORT = 5533
+SERVERNUM = 2
 
 netsim_simple:
-	python3 docker_setup/netsim/netsim.py servers start -s /home/CDN/docker_setup/netsim/servers/2servers
-
-netsim_onelink_start:
-	python3 docker_setup/netsim/netsim.py onelink start
-
-netsim_onelink_run:
-	python3 docker_setup/netsim/netsim.py onelink run -e /home/CDN/docker_setup/netsim/topology/onelink/onelink.events -l logs/onelink.log
-
-netsim_onelink_stop:
-	python3 docker_setup/netsim/netsim.py onelink stop
+	python3 docker_setup/netsim/netsim.py servers start -s /home/CDN/docker_setup/netsim/servers/$(SERVERNUM)servers
 
 netsim_start:
 	python3 docker_setup/netsim/netsim.py $(LINKTYPE) start
@@ -37,7 +29,7 @@ proxy2:
 	python3 proxy.py logs/$(LINKTYPE)/$(ALPHA)/proxy2.log $(ALPHA) 8998 $(DNSPORT) 15641 $(DEBUG)
 
 graph:
-	cd graphs/$(LINKTYPE)/$(ALPHA) && python ../../../grapher.py ../../../logs/$(LINKTYPE)/$(ALPHA)/netsim.log ../../../logs/$(LINKTYPE)/$(ALPHA)/proxy1.log ../../../logs/$(LINKTYPE)/$(ALPHA)/proxy2.log
+	cd graphs/$(LINKTYPE)/$(ALPHA) && ../../../grapher.py ../../../logs/$(LINKTYPE)/$(ALPHA)/netsim.log ../../../logs/$(LINKTYPE)/$(ALPHA)/proxy1.log ../../../logs/$(LINKTYPE)/$(ALPHA)/proxy2.log
 
 DNS_simple:
-	python3 dns.py /home/CDN/docker_setup/netsim/servers/2servers $(DNSPORT)
+	python3 dns.py /home/CDN/docker_setup/netsim/servers/$(SERVERNUM)servers $(DNSPORT)

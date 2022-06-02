@@ -6,7 +6,6 @@ app = Flask(__name__)
 
 @app.route("/dns")
 def dns():
-    print("inside dns")
     port = get_port()
     return str(port)
 

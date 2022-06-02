@@ -3,6 +3,7 @@ ALPHA ?= 0.1
 DEBUG = True
 DNSPORT = 5533
 SERVERNUM = 2
+PROXYPORT ?= 8999
 
 netsim_simple:
 	python3 docker_setup/netsim/netsim.py servers start -s /home/CDN/docker_setup/netsim/servers/$(SERVERNUM)servers
@@ -20,7 +21,7 @@ netsim_stop:
 	python3 docker_setup/netsim/netsim.py $(LINKTYPE) stop
 
 proxy_simple:
-	python3 proxy.py logs/proxy_simple.log 0.125 8999 $(DNSPORT)
+	python3 proxy.py logs/proxy_simple.log 0.125 $(PROXYPORT) $(DNSPORT)
 
 proxy_onelink:
 	python3 proxy.py logs/proxy_onelink.log 0.125 8999 $(DNSPORT) 15641 $(DEBUG)

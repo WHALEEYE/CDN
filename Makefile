@@ -7,6 +7,9 @@ SERVERNUM = 2
 netsim_simple:
 	python3 docker_setup/netsim/netsim.py servers start -s /home/CDN/docker_setup/netsim/servers/$(SERVERNUM)servers
 
+netsim_simple_stop:
+	python3 docker_setup/netsim/netsim.py servers stop -s /home/CDN/docker_setup/netsim/servers/$(SERVERNUM)servers
+
 netsim_start:
 	python3 docker_setup/netsim/netsim.py $(LINKTYPE) start
 
